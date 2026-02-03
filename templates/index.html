@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premier League Standings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .standings-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #38003c 0%, #500052 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        
+        th:first-child {
+            text-align: center;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr:nth-child(-n+4) {
+            background-color: #e8f5e9;
+        }
+        
+        tbody tr:nth-child(5) {
+            background-color: #fff3e0;
+        }
+        
+        tbody tr:nth-last-child(-n+3) {
+            background-color: #ffebee;
+        }
+        
+        td {
+            padding: 18px 20px;
+            color: #333;
+        }
+        
+        td:first-child {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        
+        .team-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .points {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #38003c;
+        }
+        
+        .positive {
+            color: #4caf50;
+        }
+        
+        .negative {
+            color: #f44336;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+        
+        .last-updated {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚽ Premier League</h1>
+            <p>2025/26 Season Standings</p>
+        </header>
+        
+        <div class="standings-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Team</th>
+                        <th class="stat">P</th>
+                        <th class="stat">W</th>
+                        <th class="stat">D</th>
+                        <th class="stat">L</th>
+                        <th class="stat">GF</th>
+                        <th class="stat">GA</th>
+                        <th class="stat">GD</th>
+                        <th class="stat">Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td>{{ team.position }}</td>
+                        <td class="team-name">{{ team.team_name }}</td>
+                        <td class="stat">{{ team.played }}</td>
+                        <td class="stat">{{ team.wins }}</td>
+                        <td class="stat">{{ team.draws }}</td>
+                        <td class="stat">{{ team.losses }}</td>
+                        <td class="stat">{{ team.goals_for }}</td>
+                        <td class="stat">{{ team.goals_against }}</td>
+                        <td class="stat {% if team.goal_difference > 0 %}positive{% elif team.goal_difference < 0 %}negative{% endif %}">
+                            {% if team.goal_difference > 0 %}+{% endif %}{{ team.goal_difference }}
+                        </td>
+                        <td class="stat points">{{ team.points }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <footer>
+            {% if teams %}
+            <div class="last-updated">
+                Last updated: {{ teams[0].scraped_at.split('.')[0] }}
+            </div>
+            {% endif %}
+            <p style="margin-top: 20px;">Data scraped from BBC Sport</p>
+        </footer>
+    </div>
+</body>
+</html>
