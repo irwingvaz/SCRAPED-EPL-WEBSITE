@@ -31,26 +31,24 @@ def scrape_top_scorers():
     for row in rows:
         cells = row.find_all('td')
         if len(cells) >= 7:
-            # Extract player name and team from second cell
-            name_cell = cells[1].text.strip()
-            # Name format is like "E. HaalandMan CityE. HaalandMa..."
-            # We need to parse it carefully
+            name_cell = cells[1]
 
-            # Try to find team badge container for team name
-            badge = row.find(attrs={'data-testid': lambda x: x and 'badge-container' in x if x else False})
-            team = ''
-            if badge:
-                team_slug = badge.get('data-testid', '').replace('badge-container-', '')
-                team = team_slug.replace('-', ' ').title()
+            # Find the player name element by its specific class
+            player_name_elem = name_cell.find(class_=lambda c: c and 'PlayerName' in c)
+            if player_name_elem:
+                player_name = player_name_elem.get_text(strip=True)
+            else:
+                # Fallback: extract from text before team name
+                player_name = cells[1].text.strip()[:20]
 
-            # Extract player name from the cell
-            # Pattern: "FirstInitial. LastNameTeamNameFirstInitial. ..." or "Full NameTeamName..."
-            import re
-            # Try pattern like "E. Haaland" or "João Pedro"
-            name_match = re.match(r'^([A-Z]\.\s*[A-Za-zÀ-ÿ\-\']+|[A-Za-zÀ-ÿ]+\s+[A-Za-zÀ-ÿ\-\']+)', name_cell)
-            player_name = name_match.group(1) if name_match else name_cell[:20]
-            # Clean up any team name that got attached
-            player_name = re.sub(r'(Man City|Man Utd|Liverpool|Chelsea|Arsenal|Brentford|Brighton|Everton|Fulham|Newcastle|Spurs|West Ham|Wolves|Burnley|Crystal Palace|Bournemouth|Nottm Forest|Leeds|Sunderland|Aston Villa).*$', '', player_name, flags=re.IGNORECASE).strip()
+            # Find team name element by its specific class
+            team_elem = name_cell.find(class_=lambda c: c and 'TeamsSummary' in c)
+            if team_elem:
+                team = team_elem.get_text(strip=True)
+            else:
+                # Fallback: get from badge
+                badge = row.find(attrs={'data-testid': lambda x: x and 'badge-container' in x if x else False})
+                team = badge.get('data-testid', '').replace('badge-container-', '').replace('-', ' ').title() if badge else ''
 
             scorers.append({
                 'rank': int(cells[0].text.strip()),
