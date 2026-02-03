@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Fixtures - Premier League{% endblock %}
+{% block header_title %}Premier League{% endblock %}
+{% block header_subtitle %}Upcoming Fixtures{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .fixture-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        border-bottom: 1px solid var(--row-border);
+        transition: all 0.3s ease;
+    }
+    .fixture-card:hover {
+        background-color: var(--row-hover);
+    }
+    .fixture-card:last-child {
+        border-bottom: none;
+    }
+    .team-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 40%;
+    }
+    .team-info.away {
+        justify-content: flex-end;
+        text-align: right;
+    }
+    .team-name {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: var(--table-text);
+    }
+    .match-info {
+        text-align: center;
+        width: 20%;
+    }
+    .match-time {
+        background: linear-gradient(135deg, var(--header-bg-1), var(--header-bg-2));
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 1em;
+    }
+    .vs-text {
+        color: #888;
+        font-size: 0.85em;
+        margin-top: 5px;
+    }
+    @media (max-width: 768px) {
+        .fixture-card {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+        .team-info, .team-info.away {
+            width: 100%;
+            justify-content: center;
+        }
+        .match-info { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    {% if fixtures %}
+        {% for fixture in fixtures %}
+        <div class="fixture-card">
+            <div class="team-info">
+                <span class="team-badge" style="background: {{ fixture.home_team | team_color }};">
+                    {{ fixture.home_team[:2] | upper }}
+                </span>
+                <span class="team-name">{{ fixture.home_team }}</span>
+            </div>
+            <div class="match-info">
+                <div class="match-time">{{ fixture.time or 'TBD' }}</div>
+                <div class="vs-text">vs</div>
+            </div>
+            <div class="team-info away">
+                <span class="team-name">{{ fixture.away_team }}</span>
+                <span class="team-badge" style="background: {{ fixture.away_team | team_color }};">
+                    {{ fixture.away_team[:2] | upper }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <h3>No Upcoming Fixtures</h3>
+        <p>There are no upcoming fixtures to display at this time.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

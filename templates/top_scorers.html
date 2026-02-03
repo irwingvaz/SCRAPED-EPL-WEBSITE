@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Top Scorers - Premier League{% endblock %}
+{% block header_title %}Premier League{% endblock %}
+{% block header_subtitle %}Top Scorers 2025/26{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    {% if scorers %}
+    <table>
+        <thead>
+            <tr>
+                <th style="text-align: center;">Rank</th>
+                <th>Player</th>
+                <th>Team</th>
+                <th class="stat">Goals</th>
+                <th class="stat">Assists</th>
+                <th class="stat">Played</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scorer in scorers %}
+            <tr>
+                <td class="rank">{{ scorer.rank }}</td>
+                <td style="font-weight: 600;">{{ scorer.player_name }}</td>
+                <td>
+                    <span class="team-badge" style="background: {{ scorer.team | team_color }};">
+                        {{ scorer.team[:2] | upper }}
+                    </span>
+                    {{ scorer.team }}
+                </td>
+                <td class="stat stat-highlight">{{ scorer.goals }}</td>
+                <td class="stat">{{ scorer.assists }}</td>
+                <td class="stat">{{ scorer.played }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No Data Available</h3>
+        <p>Top scorer data could not be loaded at this time.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

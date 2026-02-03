@@ -84,6 +84,28 @@
             opacity: 0.9;
         }
 
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        nav a:hover, nav a.active {
+            background: white;
+            color: #38003c;
+        }
+
         /* Dark Mode Toggle */
         .theme-toggle {
             position: fixed;
@@ -548,6 +570,14 @@
             <h1>⚽ Premier League</h1>
             <p>2025/26 Season Standings</p>
         </header>
+
+        <nav>
+            <a href="/" class="active">Standings</a>
+            <a href="/top-scorers">Top Scorers</a>
+            <a href="/fixtures">Fixtures</a>
+            <a href="/results">Results</a>
+            <a href="/export/csv">Export CSV</a>
+        </nav>
 
         <!-- Stats Cards -->
         {% if teams %}

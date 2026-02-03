@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Results - Premier League{% endblock %}
+{% block header_title %}Premier League{% endblock %}
+{% block header_subtitle %}Recent Results{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .result-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+        border-bottom: 1px solid var(--row-border);
+        transition: all 0.3s ease;
+    }
+    .result-card:hover {
+        background-color: var(--row-hover);
+    }
+    .result-card:last-child {
+        border-bottom: none;
+    }
+    .team-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 35%;
+    }
+    .team-info.away {
+        justify-content: flex-end;
+        text-align: right;
+    }
+    .team-name {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: var(--table-text);
+    }
+    .team-name.winner {
+        color: #4caf50;
+    }
+    .score-info {
+        text-align: center;
+        width: 30%;
+    }
+    .score {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        font-size: 1.8em;
+        font-weight: bold;
+    }
+    .score-num {
+        background: linear-gradient(135deg, var(--header-bg-1), var(--header-bg-2));
+        color: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .score-divider {
+        color: #888;
+        font-size: 0.8em;
+    }
+    .ft-badge {
+        background: #4caf50;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 0.7em;
+        margin-top: 8px;
+        display: inline-block;
+    }
+    @media (max-width: 768px) {
+        .result-card {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+        .team-info, .team-info.away {
+            width: 100%;
+            justify-content: center;
+        }
+        .score-info { width: 100%; }
+        .score { font-size: 1.5em; }
+        .score-num { width: 40px; height: 40px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    {% if results %}
+        {% for result in results %}
+        <div class="result-card">
+            <div class="team-info">
+                <span class="team-badge" style="background: {{ result.home_team | team_color }};">
+                    {{ result.home_team[:2] | upper }}
+                </span>
+                <span class="team-name {% if result.home_score > result.away_score %}winner{% endif %}">
+                    {{ result.home_team }}
+                </span>
+            </div>
+            <div class="score-info">
+                <div class="score">
+                    <span class="score-num">{{ result.home_score }}</span>
+                    <span class="score-divider">-</span>
+                    <span class="score-num">{{ result.away_score }}</span>
+                </div>
+                <span class="ft-badge">FT</span>
+            </div>
+            <div class="team-info away">
+                <span class="team-name {% if result.away_score > result.home_score %}winner{% endif %}">
+                    {{ result.away_team }}
+                </span>
+                <span class="team-badge" style="background: {{ result.away_team | team_color }};">
+                    {{ result.away_team[:2] | upper }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <h3>No Recent Results</h3>
+        <p>There are no recent match results to display. Check back after matchday!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
