@@ -143,8 +143,24 @@ def scrape_fixtures():
 
 
 def scrape_results():
-    """Scrape recent Premier League results from BBC Sport."""
-    url = "https://www.bbc.com/sport/football/premier-league/scores-fixtures"
+    """Scrape recent Premier League results from Sky Sports."""
+    import json
+
+    # Current Premier League teams (2025/26 season)
+    PL_TEAMS = {
+        'arsenal', 'aston villa', 'bournemouth', 'afc bournemouth', 'brentford',
+        'brighton', 'brighton & hove albion', 'brighton and hove albion',
+        'chelsea', 'crystal palace', 'everton', 'fulham',
+        'ipswich', 'ipswich town', 'leeds', 'leeds united',
+        'leicester', 'leicester city', 'liverpool',
+        'manchester city', 'manchester united', 'man city', 'man utd',
+        'newcastle', 'newcastle united',
+        'nottingham forest', 'nottm forest',
+        'southampton', 'tottenham', 'tottenham hotspur', 'spurs',
+        'west ham', 'west ham united', 'wolves', 'wolverhampton', 'wolverhampton wanderers'
+    }
+
+    url = "https://www.skysports.com/premier-league-results"
 
     response = requests.get(url, headers=HEADERS)
     if response.status_code != 200:
@@ -155,52 +171,42 @@ def scrape_results():
 
     results = []
 
-    # Find list items containing match data
-    for li in soup.find_all('li'):
-        text = li.get_text()
-        if 'versus' not in text.lower():
+    # Find match elements with JSON data
+    matches = soup.find_all(class_='ui-sport-match-score')
+
+    for match in matches:
+        data_state = match.get('data-state')
+        if not data_state:
             continue
 
-        # Look for score pattern
-        import re
-        score_match = re.search(r'(\d+)\s*-\s*(\d+)', text)
+        try:
+            data = json.loads(data_state)
 
-        if not score_match:
-            continue  # This is a fixture, not a result
+            # Only include completed matches
+            if not data.get('isResult'):
+                continue
 
-        home_score = int(score_match.group(1))
-        away_score = int(score_match.group(2))
+            home = data['teams']['home']
+            away = data['teams']['away']
 
-        spans = li.find_all('span')
-        span_texts = [s.get_text(strip=True) for s in spans if s.get_text(strip=True)]
+            home_name = home['name']['full']
+            away_name = away['name']['full']
 
-        if len(span_texts) < 7:
+            # Filter to only include actual Premier League teams
+            if home_name.lower() not in PL_TEAMS or away_name.lower() not in PL_TEAMS:
+                continue
+
+            results.append({
+                'home_team': home_name,
+                'away_team': away_name,
+                'home_score': home['score']['current'],
+                'away_score': away['score']['current']
+            })
+
+        except (json.JSONDecodeError, KeyError):
             continue
 
-        # Parse team names
-        home_team = span_texts[2] if len(span_texts) > 2 else ''
-        away_team = span_texts[7] if len(span_texts) > 7 else span_texts[-1] if span_texts else ''
-
-        if not home_team or not away_team:
-            continue
-
-        results.append({
-            'home_team': home_team,
-            'away_team': away_team,
-            'home_score': home_score,
-            'away_score': away_score,
-        })
-
-    # Remove duplicates
-    seen = set()
-    unique_results = []
-    for r in results:
-        key = (r['home_team'], r['away_team'], r['home_score'], r['away_score'])
-        if key not in seen:
-            seen.add(key)
-            unique_results.append(r)
-
-    return unique_results[:20]
+    return results[:20]
 
 
 if __name__ == "__main__":
