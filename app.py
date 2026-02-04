@@ -89,7 +89,10 @@ def top_scorers():
 def fixtures():
     """Page showing upcoming fixtures."""
     fixture_list = scrape_fixtures()
-    return render_template('fixtures.html', fixtures=fixture_list)
+    # Get team positions for display
+    teams = get_teams_data()
+    team_positions = {t['team_name'].lower(): t['position'] for t in teams}
+    return render_template('fixtures.html', fixtures=fixture_list, team_positions=team_positions)
 
 @app.route('/results')
 def results():

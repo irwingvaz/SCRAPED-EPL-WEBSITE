@@ -10,7 +10,7 @@
     <table>
         <thead>
             <tr>
-                <th style="text-align: center;">Rank</th>
+                <th style="text-align: center; width: 60px;">Rank</th>
                 <th>Player</th>
                 <th>Team</th>
                 <th class="stat">Goals</th>
@@ -20,7 +20,7 @@
         </thead>
         <tbody>
             {% for scorer in scorers %}
-            <tr>
+            <tr style="animation-delay: {{ loop.index * 0.05 }}s">
                 <td class="rank">{{ scorer.rank }}</td>
                 <td style="font-weight: 600;">{{ scorer.player_name }}</td>
                 <td>

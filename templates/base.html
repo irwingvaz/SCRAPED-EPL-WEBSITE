@@ -4,147 +4,356 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Premier League{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <link rel="icon" href="https://www.premierleague.com/resources/rebrand/v7/favicon/favicon-32x32.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-gradient-1: #667eea;
-            --bg-gradient-2: #764ba2;
-            --text-primary: white;
-            --table-bg: white;
-            --table-text: #333;
-            --header-bg-1: #38003c;
-            --header-bg-2: #500052;
-            --row-border: #f0f0f0;
-            --row-hover: #f8f9fa;
-            --card-bg: rgba(255,255,255,0.95);
-            --card-text: #333;
+            --primary: #37003c;
+            --primary-light: #5a0062;
+            --accent: #00ff87;
+            --accent-secondary: #04f5ff;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.7);
+            --card-bg: rgba(255,255,255,0.08);
+            --card-border: rgba(255,255,255,0.1);
+            --table-bg: rgba(255,255,255,0.95);
+            --table-text: #1a1a2e;
+            --row-hover: rgba(55,0,60,0.05);
         }
 
         [data-theme="dark"] {
-            --bg-gradient-1: #1a1a2e;
-            --bg-gradient-2: #16213e;
-            --text-primary: #e0e0e0;
-            --table-bg: #1e1e2f;
-            --table-text: #e0e0e0;
-            --header-bg-1: #0f0f1a;
-            --header-bg-2: #1a1a2e;
-            --row-border: #2d2d44;
-            --row-hover: #2a2a40;
-            --card-bg: #1e1e2f;
-            --card-text: #e0e0e0;
+            --table-bg: rgba(20,20,35,0.95);
+            --table-text: #e8e8e8;
+            --row-hover: rgba(255,255,255,0.05);
+            --card-bg: rgba(255,255,255,0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
-            transition: background 0.3s ease;
+            overflow-x: hidden;
+            color: var(--text-primary);
         }
 
-        .container { max-width: 1200px; margin: 0 auto; }
+        .bg-wrapper {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #1a0a1f 0%, #37003c 25%, #5a0062 50%, #37003c 75%, #1a0a1f 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
 
-        header { text-align: center; color: var(--text-primary); margin-bottom: 20px; }
-        header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        header p { font-size: 1.1em; opacity: 0.9; }
+        .bg-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0,255,135,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(4,245,255,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(90,0,98,0.3) 0%, transparent 70%);
+            animation: pulseGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: linear-gradient(135deg, #00ff87, #04f5ff);
+            top: -100px; right: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: linear-gradient(135deg, #ff0080, #7928ca);
+            bottom: -50px; left: -50px;
+            animation: float2 25s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-50px, 50px) scale(1.1); }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -40px) scale(0.9); }
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: slideDown 0.8s ease forwards;
+        }
+
+        @keyframes slideDown {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .epl-logo {
+            height: 70px;
+            width: auto;
+            filter: drop-shadow(0 4px 20px rgba(0,255,135,0.3));
+            transition: transform 0.3s ease;
+        }
+        .epl-logo:hover { transform: scale(1.05); }
+
+        header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent) 50%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-top: 5px;
+        }
 
         .theme-toggle {
-            position: fixed; top: 20px; right: 20px;
-            background: var(--card-bg); border: none; border-radius: 50px;
-            padding: 10px 15px; cursor: pointer; font-size: 1.2em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000;
+            position: fixed;
+            top: 25px; right: 25px;
+            width: 50px; height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            cursor: pointer;
+            font-size: 1.3em;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .theme-toggle:hover { transform: scale(1.1); }
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 8px 30px rgba(0,255,135,0.3);
+        }
 
         nav {
-            display: flex; justify-content: center; gap: 15px;
-            margin-bottom: 25px; flex-wrap: wrap;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeIn 0.8s ease 0.2s forwards;
         }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
         nav a {
-            background: rgba(255,255,255,0.2); color: white;
-            padding: 10px 20px; border-radius: 25px;
-            text-decoration: none; font-weight: 500;
-            transition: all 0.3s ease;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        nav a::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
         }
         nav a:hover, nav a.active {
-            background: white; color: #38003c;
+            border-color: var(--accent);
+            color: #1a1a2e;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,255,135,0.3);
         }
+        nav a:hover::before, nav a.active::before { opacity: 1; }
 
         .content-card {
             background: var(--table-bg);
-            border-radius: 15px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+            opacity: 0;
+            transform: translateY(40px);
+            animation: slideUp 0.6s ease 0.3s forwards;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         table { width: 100%; border-collapse: collapse; }
 
         thead {
-            background: linear-gradient(135deg, var(--header-bg-1) 0%, var(--header-bg-2) 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
         }
 
         th {
-            padding: 18px 15px; text-align: left;
-            font-weight: 600; text-transform: uppercase;
-            font-size: 0.85em; letter-spacing: 1px;
+            padding: 20px 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
         }
 
         tbody tr {
-            border-bottom: 1px solid var(--row-border);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: rowSlide 0.4s ease forwards;
         }
-        tbody tr:hover {
-            background-color: var(--row-hover);
-            transform: scale(1.01);
+        [data-theme="dark"] tbody tr { border-bottom-color: rgba(255,255,255,0.05); }
+
+        @keyframes rowSlide {
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        td { padding: 15px; color: var(--table-text); }
+        tbody tr:nth-child(1) { animation-delay: 0.1s; }
+        tbody tr:nth-child(2) { animation-delay: 0.15s; }
+        tbody tr:nth-child(3) { animation-delay: 0.2s; }
+        tbody tr:nth-child(4) { animation-delay: 0.25s; }
+        tbody tr:nth-child(5) { animation-delay: 0.3s; }
+        tbody tr:nth-child(6) { animation-delay: 0.35s; }
+        tbody tr:nth-child(7) { animation-delay: 0.4s; }
+        tbody tr:nth-child(8) { animation-delay: 0.45s; }
+        tbody tr:nth-child(9) { animation-delay: 0.5s; }
+        tbody tr:nth-child(10) { animation-delay: 0.55s; }
 
-        .rank { text-align: center; font-weight: bold; font-size: 1.1em; color: #667eea; }
-        [data-theme="dark"] .rank { color: #a0a0ff; }
+        tbody tr:hover { background: var(--row-hover); }
+
+        td {
+            padding: 18px;
+            color: var(--table-text);
+            font-weight: 400;
+        }
+
+        .rank {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--primary);
+        }
+        [data-theme="dark"] .rank { color: var(--accent); }
 
         .team-badge {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.7em; color: white;
-            margin-right: 10px; vertical-align: middle;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75em;
+            color: white;
+            margin-right: 12px;
+            vertical-align: middle;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .stat { text-align: center; }
-        .stat-highlight { font-weight: bold; font-size: 1.2em; color: #38003c; }
-        [data-theme="dark"] .stat-highlight { color: #e0b0ff; }
-
-        .positive { color: #4caf50; }
-        .negative { color: #f44336; }
+        .stat-highlight {
+            font-weight: 700;
+            font-size: 1.15em;
+            color: var(--primary);
+        }
+        [data-theme="dark"] .stat-highlight { color: var(--accent); }
 
         .empty-state {
-            text-align: center; padding: 60px 20px;
+            text-align: center;
+            padding: 80px 20px;
             color: var(--table-text);
         }
-        .empty-state h3 { margin-bottom: 10px; }
+        .empty-state h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        .empty-state p { opacity: 0.6; }
 
         footer {
-            text-align: center; color: var(--text-primary);
-            margin-top: 30px; opacity: 0.9;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
         }
 
         @media (max-width: 768px) {
-            header h1 { font-size: 1.8em; }
-            th, td { padding: 10px 8px; font-size: 0.85em; }
-            nav a { padding: 8px 15px; font-size: 0.9em; }
+            header h1 { font-size: 2em; }
+            .epl-logo { height: 50px; }
+            th, td { padding: 12px 10px; font-size: 0.85em; }
+            nav a { padding: 10px 16px; font-size: 0.85em; }
         }
+
+        {% block extra_styles %}{% endblock %}
     </style>
-    {% block extra_styles %}{% endblock %}
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">🌙</button>
+    <div class="bg-wrapper"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">🌙</button>
 
     <div class="container">
         <header>
-            <h1>⚽ {% block header_title %}Premier League{% endblock %}</h1>
+            <div class="logo-container">
+                <img src="https://www.premierleague.com/resources/rebrand/v7/i/elements/pl-main-logo.png"
+                     alt="Premier League" class="epl-logo"
+                     onerror="this.src='https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg'">
+            </div>
+            <h1>{% block header_title %}Premier League{% endblock %}</h1>
             <p>{% block header_subtitle %}2025/26 Season{% endblock %}</p>
         </header>
 
@@ -159,7 +368,7 @@
         {% block content %}{% endblock %}
 
         <footer>
-            <p>Data scraped from BBC Sport</p>
+            <p>Data from BBC Sport</p>
         </footer>
     </div>
 
@@ -171,8 +380,7 @@
         themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
 
         themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';

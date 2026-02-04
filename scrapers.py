@@ -64,6 +64,9 @@ def scrape_top_scorers():
 
 def scrape_fixtures():
     """Scrape upcoming Premier League fixtures from BBC Sport."""
+    import re
+    from datetime import datetime
+
     url = "https://www.bbc.com/sport/football/premier-league/scores-fixtures"
 
     response = requests.get(url, headers=HEADERS)
@@ -72,47 +75,59 @@ def scrape_fixtures():
         return []
 
     soup = BeautifulSoup(response.content, 'lxml')
-
     fixtures = []
 
-    # Find list items containing fixture data
-    for li in soup.find_all('li'):
-        text = li.get_text()
+    # Find all H2 date headers and their associated fixtures
+    current_date = ""
+
+    # Iterate through elements to track current date context
+    for elem in soup.find_all(['h2', 'li']):
+        if elem.name == 'h2':
+            # This is a date header like "Friday 6th February"
+            date_text = elem.get_text(strip=True)
+            # Check if it looks like a date
+            if any(day in date_text for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']):
+                current_date = date_text
+            continue
+
+        # This is an li element - check if it's a fixture
+        text = elem.get_text()
         if 'versus' not in text.lower():
             continue
 
-        spans = li.find_all('span')
+        # Skip results (matches with scores)
+        if re.search(r'(\d+)\s*-\s*(\d+)', text):
+            continue
+
+        spans = elem.find_all('span')
         span_texts = [s.get_text(strip=True) for s in spans if s.get_text(strip=True)]
 
         if len(span_texts) < 7:
             continue
 
-        time_elem = li.find('time')
-        time_str = time_elem.get_text(strip=True) if time_elem else ''
+        time_elem = elem.find('time')
+        time_24h = time_elem.get_text(strip=True) if time_elem else ''
 
-        # Parse fixture data from spans
-        # Format: ['Title', 'ShortName1', 'FullName1', 'FullName1', 'Time', 'plays', 'ShortName2', 'FullName2', 'FullName2']
+        # Convert 24h to 12h format
+        time_12h = time_24h
+        if time_24h and ':' in time_24h:
+            try:
+                t = datetime.strptime(time_24h, '%H:%M')
+                time_12h = t.strftime('%I:%M %p').lstrip('0')
+            except:
+                pass
+
         home_team = span_texts[2] if len(span_texts) > 2 else ''
         away_team = span_texts[7] if len(span_texts) > 7 else span_texts[-1] if span_texts else ''
 
-        # Skip if we couldn't get both teams
         if not home_team or not away_team or home_team == away_team:
-            continue
-
-        # Check if this is a result (has a score) or upcoming fixture
-        # Look for score pattern in text
-        import re
-        score_match = re.search(r'(\d+)\s*-\s*(\d+)', text)
-
-        if score_match:
-            # This is a result, skip for fixtures
             continue
 
         fixtures.append({
             'home_team': home_team,
             'away_team': away_team,
-            'time': time_str,
-            'date': ''  # Would need additional parsing for date
+            'time': time_12h,
+            'date': current_date
         })
 
     # Remove duplicates

@@ -10,34 +10,47 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px;
-        border-bottom: 1px solid var(--row-border);
+        padding: 25px 30px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
         transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeUp 0.5s ease forwards;
     }
-    .result-card:hover {
-        background-color: var(--row-hover);
+    [data-theme="dark"] .result-card {
+        border-bottom-color: rgba(255,255,255,0.05);
     }
-    .result-card:last-child {
-        border-bottom: none;
+    .result-card:nth-child(1) { animation-delay: 0.1s; }
+    .result-card:nth-child(2) { animation-delay: 0.15s; }
+    .result-card:nth-child(3) { animation-delay: 0.2s; }
+    .result-card:nth-child(4) { animation-delay: 0.25s; }
+    .result-card:nth-child(5) { animation-delay: 0.3s; }
+
+    @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
     }
+
+    .result-card:hover { background: var(--row-hover); }
+    .result-card:last-child { border-bottom: none; }
+
     .team-info {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px;
         width: 35%;
     }
     .team-info.away {
         justify-content: flex-end;
         text-align: right;
+        flex-direction: row-reverse;
     }
     .team-name {
         font-weight: 600;
         font-size: 1.1em;
         color: var(--table-text);
     }
-    .team-name.winner {
-        color: #4caf50;
-    }
+    .team-name.winner { color: #00cc6a; }
+
     .score-info {
         text-align: center;
         width: 30%;
@@ -47,45 +60,52 @@
         align-items: center;
         justify-content: center;
         gap: 15px;
-        font-size: 1.8em;
-        font-weight: bold;
     }
     .score-num {
-        background: linear-gradient(135deg, var(--header-bg-1), var(--header-bg-2));
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.6em;
+        font-weight: 700;
+        box-shadow: 0 8px 25px rgba(55,0,60,0.3);
     }
     .score-divider {
-        color: #888;
-        font-size: 0.8em;
+        color: var(--table-text);
+        opacity: 0.3;
+        font-size: 1.2em;
     }
     .ft-badge {
-        background: #4caf50;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #00ff87, #00cc6a);
+        color: #1a1a2e;
+        padding: 4px 14px;
+        border-radius: 20px;
         font-size: 0.7em;
-        margin-top: 8px;
+        font-weight: 700;
+        margin-top: 10px;
         display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
+
     @media (max-width: 768px) {
         .result-card {
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
             text-align: center;
+            padding: 20px;
         }
         .team-info, .team-info.away {
             width: 100%;
             justify-content: center;
+            flex-direction: row;
         }
         .score-info { width: 100%; }
-        .score { font-size: 1.5em; }
-        .score-num { width: 40px; height: 40px; }
+        .score-num { width: 45px; height: 45px; font-size: 1.3em; }
     }
 </style>
 {% endblock %}
@@ -109,14 +129,14 @@
                     <span class="score-divider">-</span>
                     <span class="score-num">{{ result.away_score }}</span>
                 </div>
-                <span class="ft-badge">FT</span>
+                <span class="ft-badge">Full Time</span>
             </div>
             <div class="team-info away">
-                <span class="team-name {% if result.away_score > result.home_score %}winner{% endif %}">
-                    {{ result.away_team }}
-                </span>
                 <span class="team-badge" style="background: {{ result.away_team | team_color }};">
                     {{ result.away_team[:2] | upper }}
+                </span>
+                <span class="team-name {% if result.away_score > result.home_score %}winner{% endif %}">
+                    {{ result.away_team }}
                 </span>
             </div>
         </div>
