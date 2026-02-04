@@ -7,6 +7,42 @@ import io
 
 app = Flask(__name__)
 
+# Team logos mapping (using reliable CDN sources)
+TEAM_LOGOS = {
+    'arsenal': 'https://resources.premierleague.com/premierleague/badges/rb/t3.svg',
+    'aston villa': 'https://resources.premierleague.com/premierleague/badges/rb/t7.svg',
+    'bournemouth': 'https://resources.premierleague.com/premierleague/badges/rb/t91.svg',
+    'afc bournemouth': 'https://resources.premierleague.com/premierleague/badges/rb/t91.svg',
+    'brentford': 'https://resources.premierleague.com/premierleague/badges/rb/t94.svg',
+    'brighton': 'https://resources.premierleague.com/premierleague/badges/rb/t36.svg',
+    'brighton & hove albion': 'https://resources.premierleague.com/premierleague/badges/rb/t36.svg',
+    'chelsea': 'https://resources.premierleague.com/premierleague/badges/rb/t8.svg',
+    'crystal palace': 'https://resources.premierleague.com/premierleague/badges/rb/t31.svg',
+    'everton': 'https://resources.premierleague.com/premierleague/badges/rb/t11.svg',
+    'fulham': 'https://resources.premierleague.com/premierleague/badges/rb/t54.svg',
+    'ipswich': 'https://resources.premierleague.com/premierleague/badges/rb/t40.svg',
+    'ipswich town': 'https://resources.premierleague.com/premierleague/badges/rb/t40.svg',
+    'leeds': 'https://resources.premierleague.com/premierleague/badges/rb/t2.svg',
+    'leeds united': 'https://resources.premierleague.com/premierleague/badges/rb/t2.svg',
+    'leicester': 'https://resources.premierleague.com/premierleague/badges/rb/t13.svg',
+    'leicester city': 'https://resources.premierleague.com/premierleague/badges/rb/t13.svg',
+    'liverpool': 'https://resources.premierleague.com/premierleague/badges/rb/t14.svg',
+    'manchester city': 'https://resources.premierleague.com/premierleague/badges/rb/t43.svg',
+    'manchester united': 'https://resources.premierleague.com/premierleague/badges/rb/t1.svg',
+    'newcastle': 'https://resources.premierleague.com/premierleague/badges/rb/t4.svg',
+    'newcastle united': 'https://resources.premierleague.com/premierleague/badges/rb/t4.svg',
+    'nottingham forest': 'https://resources.premierleague.com/premierleague/badges/rb/t17.svg',
+    'nottm forest': 'https://resources.premierleague.com/premierleague/badges/rb/t17.svg',
+    'southampton': 'https://resources.premierleague.com/premierleague/badges/rb/t20.svg',
+    'tottenham': 'https://resources.premierleague.com/premierleague/badges/rb/t6.svg',
+    'tottenham hotspur': 'https://resources.premierleague.com/premierleague/badges/rb/t6.svg',
+    'west ham': 'https://resources.premierleague.com/premierleague/badges/rb/t21.svg',
+    'west ham united': 'https://resources.premierleague.com/premierleague/badges/rb/t21.svg',
+    'wolves': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
+    'wolverhampton': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
+    'wolverhampton wanderers': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
+}
+
 # Team colors mapping
 TEAM_COLORS = {
     'arsenal': '#EF0107',
@@ -47,6 +83,42 @@ def team_color_filter(team_name):
     """Return the team's primary color or a default color."""
     return TEAM_COLORS.get(team_name.lower(), '#667eea')
 
+@app.template_filter('team_logo')
+def team_logo_filter(team_name):
+    """Return the team's logo URL or None."""
+    return TEAM_LOGOS.get(team_name.lower())
+
+def get_team_form(team_name, results_list, limit=5):
+    """Calculate a team's recent form from results (W/D/L)."""
+    form = []
+    team_lower = team_name.lower()
+
+    for result in results_list:
+        home = result['home_team'].lower()
+        away = result['away_team'].lower()
+
+        if team_lower in home or home in team_lower:
+            # Team played at home
+            if result['home_score'] > result['away_score']:
+                form.append('W')
+            elif result['home_score'] < result['away_score']:
+                form.append('L')
+            else:
+                form.append('D')
+        elif team_lower in away or away in team_lower:
+            # Team played away
+            if result['away_score'] > result['home_score']:
+                form.append('W')
+            elif result['away_score'] < result['home_score']:
+                form.append('L')
+            else:
+                form.append('D')
+
+        if len(form) >= limit:
+            break
+
+    return form
+
 def get_teams_data():
     """Helper function to get standings as list of dictionaries."""
     db = PremierLeagueDB()
@@ -77,6 +149,11 @@ def get_teams_data():
 def home():
     """Main page showing the standings"""
     teams = get_teams_data()
+    # Get recent results for form calculation
+    results_list = scrape_results()
+    # Add form data to each team
+    for team in teams:
+        team['form'] = get_team_form(team['team_name'], results_list)
     return render_template('index.html', teams=teams)
 
 @app.route('/top-scorers')
@@ -99,6 +176,60 @@ def results():
     """Page showing recent results."""
     result_list = scrape_results()
     return render_template('results.html', results=result_list)
+
+@app.route('/team/<team_name>')
+def team_detail(team_name):
+    """Page showing detailed team information."""
+    teams = get_teams_data()
+    results_list = scrape_results()
+    fixture_list = scrape_fixtures()
+
+    # Find the team (case-insensitive, handle URL encoding)
+    team_name_clean = team_name.replace('-', ' ').replace('_', ' ').lower()
+    team = None
+    for t in teams:
+        if team_name_clean in t['team_name'].lower() or t['team_name'].lower() in team_name_clean:
+            team = t
+            break
+
+    if not team:
+        return render_template('error.html',
+                               error_code=404,
+                               error_title="Team Not Found",
+                               error_message=f"Could not find team: {team_name}"), 404
+
+    # Get team's form
+    team['form'] = get_team_form(team['team_name'], results_list)
+
+    # Get team's recent results
+    team_results = []
+    team_lower = team['team_name'].lower()
+    for result in results_list:
+        if team_lower in result['home_team'].lower() or team_lower in result['away_team'].lower():
+            team_results.append(result)
+        if len(team_results) >= 5:
+            break
+
+    # Get team's upcoming fixtures
+    team_fixtures = []
+    for fixture in fixture_list:
+        if team_lower in fixture['home_team'].lower() or team_lower in fixture['away_team'].lower():
+            team_fixtures.append(fixture)
+        if len(team_fixtures) >= 5:
+            break
+
+    # Calculate additional stats
+    if team['played'] > 0:
+        team['win_rate'] = round((team['wins'] / team['played']) * 100, 1)
+        team['ppg'] = round(team['points'] / team['played'], 2)
+    else:
+        team['win_rate'] = 0
+        team['ppg'] = 0
+
+    return render_template('team_detail.html',
+                           team=team,
+                           team_results=team_results,
+                           team_fixtures=team_fixtures)
 
 @app.route('/export/csv')
 def export_csv():

@@ -103,6 +103,13 @@
         flex-shrink: 0;
     }
 
+    .team-logo {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
     .team-name {
         font-weight: 600;
         font-size: 1.1em;
@@ -200,9 +207,14 @@
             <div class="fixture-row">
                 <div class="team-block home">
                     <div class="team-main">
-                        <span class="team-badge" style="background: {{ fixture.home_team | team_color }};">
-                            {{ fixture.home_team[:2] | upper }}
-                        </span>
+                        {% set home_logo = fixture.home_team | team_logo %}
+                        {% if home_logo %}
+                            <img src="{{ home_logo }}" alt="{{ fixture.home_team }}" class="team-logo">
+                        {% else %}
+                            <span class="team-badge" style="background: {{ fixture.home_team | team_color }};">
+                                {{ fixture.home_team[:2] | upper }}
+                            </span>
+                        {% endif %}
                         <span class="team-name">{{ fixture.home_team }}</span>
                     </div>
                     <div class="team-position">
@@ -218,9 +230,14 @@
 
                 <div class="team-block away">
                     <div class="team-main">
-                        <span class="team-badge" style="background: {{ fixture.away_team | team_color }};">
-                            {{ fixture.away_team[:2] | upper }}
-                        </span>
+                        {% set away_logo = fixture.away_team | team_logo %}
+                        {% if away_logo %}
+                            <img src="{{ away_logo }}" alt="{{ fixture.away_team }}" class="team-logo">
+                        {% else %}
+                            <span class="team-badge" style="background: {{ fixture.away_team | team_color }};">
+                                {{ fixture.away_team[:2] | upper }}
+                            </span>
+                        {% endif %}
                         <span class="team-name">{{ fixture.away_team }}</span>
                     </div>
                     <div class="team-position">

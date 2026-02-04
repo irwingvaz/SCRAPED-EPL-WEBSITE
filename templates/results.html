@@ -51,6 +51,12 @@
     }
     .team-name.winner { color: #00cc6a; }
 
+    .team-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+    }
+
     .score-info {
         text-align: center;
         width: 30%;
@@ -116,9 +122,14 @@
         {% for result in results %}
         <div class="result-card">
             <div class="team-info">
-                <span class="team-badge" style="background: {{ result.home_team | team_color }};">
-                    {{ result.home_team[:2] | upper }}
-                </span>
+                {% set home_logo = result.home_team | team_logo %}
+                {% if home_logo %}
+                    <img src="{{ home_logo }}" alt="{{ result.home_team }}" class="team-logo">
+                {% else %}
+                    <span class="team-badge" style="background: {{ result.home_team | team_color }};">
+                        {{ result.home_team[:2] | upper }}
+                    </span>
+                {% endif %}
                 <span class="team-name {% if result.home_score > result.away_score %}winner{% endif %}">
                     {{ result.home_team }}
                 </span>
@@ -132,9 +143,14 @@
                 <span class="ft-badge">Full Time</span>
             </div>
             <div class="team-info away">
-                <span class="team-badge" style="background: {{ result.away_team | team_color }};">
-                    {{ result.away_team[:2] | upper }}
-                </span>
+                {% set away_logo = result.away_team | team_logo %}
+                {% if away_logo %}
+                    <img src="{{ away_logo }}" alt="{{ result.away_team }}" class="team-logo">
+                {% else %}
+                    <span class="team-badge" style="background: {{ result.away_team | team_color }};">
+                        {{ result.away_team[:2] | upper }}
+                    </span>
+                {% endif %}
                 <span class="team-name {% if result.away_score > result.home_score %}winner{% endif %}">
                     {{ result.away_team }}
                 </span>

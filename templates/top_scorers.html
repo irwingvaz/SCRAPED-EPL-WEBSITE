@@ -4,6 +4,18 @@
 {% block header_title %}Premier League{% endblock %}
 {% block header_subtitle %}Top Scorers 2025/26{% endblock %}
 
+{% block extra_styles %}
+<style>
+    .team-logo-small {
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+        vertical-align: middle;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="content-card">
     {% if scorers %}
@@ -24,9 +36,14 @@
                 <td class="rank">{{ scorer.rank }}</td>
                 <td style="font-weight: 600;">{{ scorer.player_name }}</td>
                 <td>
-                    <span class="team-badge" style="background: {{ scorer.team | team_color }};">
-                        {{ scorer.team[:2] | upper }}
-                    </span>
+                    {% set team_logo_url = scorer.team | team_logo %}
+                    {% if team_logo_url %}
+                        <img src="{{ team_logo_url }}" alt="{{ scorer.team }}" class="team-logo-small">
+                    {% else %}
+                        <span class="team-badge" style="background: {{ scorer.team | team_color }};">
+                            {{ scorer.team[:2] | upper }}
+                        </span>
+                    {% endif %}
                     {{ scorer.team }}
                 </td>
                 <td class="stat stat-highlight">{{ scorer.goals }}</td>

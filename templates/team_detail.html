@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.team_name }} - Premier League{% endblock %}
+{% block header_title %}{{ team.team_name }}{% endblock %}
+{% block header_subtitle %}Team Profile{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .team-hero {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding: 40px;
+        background: var(--table-bg);
+        border-radius: 24px;
+        margin-bottom: 30px;
+        box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+        opacity: 0;
+        transform: translateY(30px);
+        animation: slideUp 0.6s ease 0.1s forwards;
+    }
+
+    @keyframes slideUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .team-logo-large {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+    }
+
+    .team-logo-fallback {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 2.5em;
+        color: white;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .team-hero-info {
+        flex: 1;
+    }
+
+    .team-hero-name {
+        font-size: 2.2em;
+        font-weight: 700;
+        color: var(--table-text);
+        margin-bottom: 10px;
+    }
+
+    .team-hero-position {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+    }
+
+    .position-number {
+        font-size: 1.5em;
+        font-weight: 700;
+    }
+
+    .form-display {
+        display: flex;
+        gap: 8px;
+        margin-top: 20px;
+    }
+
+    .form-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85em;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .form-dot.W { background: linear-gradient(135deg, #00cc6a, #00ff87); }
+    .form-dot.D { background: linear-gradient(135deg, #888, #aaa); }
+    .form-dot.L { background: linear-gradient(135deg, #ff3b30, #ff6b6b); }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-box {
+        background: var(--table-bg);
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideUp 0.5s ease forwards;
+    }
+
+    .stat-box:nth-child(1) { animation-delay: 0.15s; }
+    .stat-box:nth-child(2) { animation-delay: 0.2s; }
+    .stat-box:nth-child(3) { animation-delay: 0.25s; }
+    .stat-box:nth-child(4) { animation-delay: 0.3s; }
+    .stat-box:nth-child(5) { animation-delay: 0.35s; }
+    .stat-box:nth-child(6) { animation-delay: 0.4s; }
+
+    .stat-box-value {
+        font-size: 2.2em;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 5px;
+    }
+    [data-theme="dark"] .stat-box-value { color: var(--accent); }
+
+    .stat-box-label {
+        font-size: 0.85em;
+        color: var(--table-text);
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .section-title {
+        font-size: 1.4em;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 30px 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--card-border), transparent);
+    }
+
+    .matches-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .match-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 25px;
+        background: var(--table-bg);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: slideRight 0.4s ease forwards;
+    }
+
+    @keyframes slideRight {
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .match-item:nth-child(1) { animation-delay: 0.1s; }
+    .match-item:nth-child(2) { animation-delay: 0.15s; }
+    .match-item:nth-child(3) { animation-delay: 0.2s; }
+    .match-item:nth-child(4) { animation-delay: 0.25s; }
+    .match-item:nth-child(5) { animation-delay: 0.3s; }
+
+    .match-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .match-teams {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+    }
+
+    .match-team {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .match-team-logo {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+    }
+
+    .match-team-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.7em;
+        color: white;
+    }
+
+    .match-team-name {
+        font-weight: 600;
+        color: var(--table-text);
+    }
+
+    .match-vs {
+        color: var(--table-text);
+        opacity: 0.4;
+        font-size: 0.85em;
+        padding: 0 10px;
+    }
+
+    .match-score {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        padding: 8px 16px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 700;
+    }
+
+    .match-time {
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+        color: #1a1a2e;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9em;
+    }
+
+    .match-date {
+        font-size: 0.85em;
+        color: var(--table-text);
+        opacity: 0.6;
+        margin-left: 15px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--accent);
+    }
+
+    .empty-matches {
+        text-align: center;
+        padding: 40px;
+        color: var(--table-text);
+        opacity: 0.6;
+        background: var(--table-bg);
+        border-radius: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .team-hero {
+            flex-direction: column;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .team-hero-name { font-size: 1.6em; }
+        .form-display { justify-content: center; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .match-item { flex-direction: column; gap: 15px; }
+        .match-teams { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">← Back to Standings</a>
+
+<div class="team-hero">
+    {% set logo = team.team_name | team_logo %}
+    {% if logo %}
+        <img src="{{ logo }}" alt="{{ team.team_name }}" class="team-logo-large">
+    {% else %}
+        <div class="team-logo-fallback" style="background: {{ team.team_name | team_color }};">
+            {{ team.team_name[:2] | upper }}
+        </div>
+    {% endif %}
+
+    <div class="team-hero-info">
+        <h2 class="team-hero-name">{{ team.team_name }}</h2>
+        <div class="team-hero-position">
+            <span class="position-number">{{ team.position }}</span>
+            <span>{{ 'st' if team.position == 1 else 'nd' if team.position == 2 else 'rd' if team.position == 3 else 'th' }} in Premier League</span>
+        </div>
+        {% if team.form %}
+        <div class="form-display">
+            {% for result in team.form %}
+                <div class="form-dot {{ result }}" title="{{ 'Win' if result == 'W' else 'Draw' if result == 'D' else 'Loss' }}">{{ result }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.points }}</div>
+        <div class="stat-box-label">Points</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.played }}</div>
+        <div class="stat-box-label">Played</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.wins }}-{{ team.draws }}-{{ team.losses }}</div>
+        <div class="stat-box-label">W-D-L</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.goals_for }}</div>
+        <div class="stat-box-label">Goals For</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.goals_against }}</div>
+        <div class="stat-box-label">Goals Against</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{% if team.goal_difference > 0 %}+{% endif %}{{ team.goal_difference }}</div>
+        <div class="stat-box-label">Goal Diff</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.win_rate }}%</div>
+        <div class="stat-box-label">Win Rate</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-box-value">{{ team.ppg }}</div>
+        <div class="stat-box-label">Points/Game</div>
+    </div>
+</div>
+
+<h3 class="section-title">Recent Results</h3>
+<div class="matches-list">
+    {% if team_results %}
+        {% for result in team_results %}
+        <div class="match-item">
+            <div class="match-teams">
+                <div class="match-team">
+                    {% set home_logo = result.home_team | team_logo %}
+                    {% if home_logo %}
+                        <img src="{{ home_logo }}" alt="{{ result.home_team }}" class="match-team-logo">
+                    {% else %}
+                        <div class="match-team-badge" style="background: {{ result.home_team | team_color }};">{{ result.home_team[:2] | upper }}</div>
+                    {% endif %}
+                    <span class="match-team-name">{{ result.home_team }}</span>
+                </div>
+                <span class="match-vs">vs</span>
+                <div class="match-team">
+                    {% set away_logo = result.away_team | team_logo %}
+                    {% if away_logo %}
+                        <img src="{{ away_logo }}" alt="{{ result.away_team }}" class="match-team-logo">
+                    {% else %}
+                        <div class="match-team-badge" style="background: {{ result.away_team | team_color }};">{{ result.away_team[:2] | upper }}</div>
+                    {% endif %}
+                    <span class="match-team-name">{{ result.away_team }}</span>
+                </div>
+            </div>
+            <div class="match-score">{{ result.home_score }} - {{ result.away_score }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-matches">No recent results available</div>
+    {% endif %}
+</div>
+
+<h3 class="section-title">Upcoming Fixtures</h3>
+<div class="matches-list">
+    {% if team_fixtures %}
+        {% for fixture in team_fixtures %}
+        <div class="match-item">
+            <div class="match-teams">
+                <div class="match-team">
+                    {% set home_logo = fixture.home_team | team_logo %}
+                    {% if home_logo %}
+                        <img src="{{ home_logo }}" alt="{{ fixture.home_team }}" class="match-team-logo">
+                    {% else %}
+                        <div class="match-team-badge" style="background: {{ fixture.home_team | team_color }};">{{ fixture.home_team[:2] | upper }}</div>
+                    {% endif %}
+                    <span class="match-team-name">{{ fixture.home_team }}</span>
+                </div>
+                <span class="match-vs">vs</span>
+                <div class="match-team">
+                    {% set away_logo = fixture.away_team | team_logo %}
+                    {% if away_logo %}
+                        <img src="{{ away_logo }}" alt="{{ fixture.away_team }}" class="match-team-logo">
+                    {% else %}
+                        <div class="match-team-badge" style="background: {{ fixture.away_team | team_color }};">{{ fixture.away_team[:2] | upper }}</div>
+                    {% endif %}
+                    <span class="match-team-name">{{ fixture.away_team }}</span>
+                </div>
+            </div>
+            <div>
+                <span class="match-time">{{ fixture.time or 'TBD' }}</span>
+                {% if fixture.date %}
+                    <span class="match-date">{{ fixture.date }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-matches">No upcoming fixtures available</div>
+    {% endif %}
+</div>
+{% endblock %}

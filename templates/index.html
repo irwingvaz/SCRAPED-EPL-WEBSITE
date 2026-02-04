@@ -480,10 +480,50 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
+        .team-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
         .team-name-text {
             font-weight: 600;
             font-size: 1.05em;
         }
+
+        .team-link {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s ease;
+        }
+        .team-link:hover {
+            color: var(--primary);
+        }
+        [data-theme="dark"] .team-link:hover {
+            color: var(--accent);
+        }
+
+        /* Form indicators */
+        .form-dots {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+        .form-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.65em;
+            color: white;
+        }
+        .form-dot.W { background: linear-gradient(135deg, #00cc6a, #00ff87); }
+        .form-dot.D { background: linear-gradient(135deg, #888, #aaa); }
+        .form-dot.L { background: linear-gradient(135deg, #ff3b30, #ff6b6b); }
 
         .stat { text-align: center; }
         .points {
@@ -625,6 +665,7 @@
                     <tr>
                         <th class="sortable" data-sort="position">Pos</th>
                         <th>Team</th>
+                        <th class="stat">Form</th>
                         <th class="stat sortable" data-sort="played">P</th>
                         <th class="stat sortable" data-sort="wins">W</th>
                         <th class="stat sortable" data-sort="draws">D</th>
@@ -651,11 +692,25 @@
                         style="animation-delay: {{ loop.index * 0.03 }}s">
                         <td>{{ team.position }}</td>
                         <td>
-                            <div class="team-cell">
-                                <div class="team-badge" style="background: {{ team.team_name | team_color }};">
-                                    {{ team.team_name[:2] | upper }}
+                            <a href="/team/{{ team.team_name | lower | replace(' ', '-') }}" class="team-link">
+                                <div class="team-cell">
+                                    {% set logo = team.team_name | team_logo %}
+                                    {% if logo %}
+                                        <img src="{{ logo }}" alt="{{ team.team_name }}" class="team-logo">
+                                    {% else %}
+                                        <div class="team-badge" style="background: {{ team.team_name | team_color }};">
+                                            {{ team.team_name[:2] | upper }}
+                                        </div>
+                                    {% endif %}
+                                    <span class="team-name-text">{{ team.team_name }}</span>
                                 </div>
-                                <span class="team-name-text">{{ team.team_name }}</span>
+                            </a>
+                        </td>
+                        <td class="stat">
+                            <div class="form-dots">
+                                {% for result in team.form %}
+                                    <div class="form-dot {{ result }}" title="{{ 'Win' if result == 'W' else 'Draw' if result == 'D' else 'Loss' }}">{{ result }}</div>
+                                {% endfor %}
                             </div>
                         </td>
                         <td class="stat">{{ team.played }}</td>
