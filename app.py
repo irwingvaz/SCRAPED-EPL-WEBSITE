@@ -4,8 +4,12 @@ from test_scraper import scrape_premier_league_table
 from scrapers import scrape_top_scorers, scrape_fixtures, scrape_results
 import csv
 import io
+import time
 
 app = Flask(__name__)
+
+_teams_cache = {'data': None, 'ts': 0}
+_TEAMS_TTL = 300
 
 TEAM_LOGOS = {
     'arsenal': 'https://resources.premierleague.com/premierleague/badges/rb/t3.svg',
@@ -124,6 +128,10 @@ def get_team_form(team_name, results_list, limit=5):
     return form
 
 def get_teams_data():
+    now = time.time()
+    if _teams_cache['data'] and now - _teams_cache['ts'] < _TEAMS_TTL:
+        return _teams_cache['data']
+
     db = PremierLeagueDB()
     standings = db.get_latest_standings()
 
@@ -147,6 +155,9 @@ def get_teams_data():
             'scraped_at': str(row[10]),
             'change': 0
         })
+
+    _teams_cache['data'] = teams
+    _teams_cache['ts'] = now
     return teams
 
 @app.route('/')
