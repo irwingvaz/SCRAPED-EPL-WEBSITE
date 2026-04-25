@@ -41,6 +41,7 @@
         border-radius: 12px;
         font-weight: 700;
         font-size: 1em;
+        white-space: nowrap;
         box-shadow: 0 4px 20px rgba(0,255,135,0.3);
     }
 
@@ -59,82 +60,63 @@
 
     .fixture-row {
         display: grid;
-        grid-template-columns: 1fr 180px 1fr;
+        grid-template-columns: 1fr 160px 1fr;
         align-items: center;
-        padding: 22px 35px;
+        gap: 20px;
+        padding: 20px 30px;
         border-bottom: 1px solid rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
-        gap: 25px;
+        transition: background 0.3s ease;
     }
     [data-theme="dark"] .fixture-row {
         border-bottom-color: rgba(255,255,255,0.05);
     }
     .fixture-row:last-child { border-bottom: none; }
-    .fixture-row:hover {
-        background: var(--row-hover);
-    }
+    .fixture-row:hover { background: var(--row-hover); }
 
-    .team-block {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    .team-block.home { align-items: flex-end; text-align: right; }
-    .team-block.away { align-items: flex-start; text-align: left; }
-
-    .team-main {
+    .team-home {
         display: flex;
         align-items: center;
         gap: 12px;
+        justify-content: flex-end;
     }
-    .team-block.home .team-main { flex-direction: row-reverse; }
 
-    .team-badge {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+    .team-away {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.8em;
-        color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        flex-shrink: 0;
-    }
-
-    .team-logo {
-        width: 42px;
-        height: 42px;
-        min-width: 42px;
-        min-height: 42px;
-        max-width: 42px;
-        max-height: 42px;
-        object-fit: contain;
-        flex-shrink: 0;
+        gap: 12px;
+        justify-content: flex-start;
     }
 
     .team-name {
         font-weight: 600;
-        font-size: 1.1em;
+        font-size: 1em;
         color: var(--table-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .team-position {
-        font-size: 0.85em;
-        color: var(--table-text);
-        opacity: 0.6;
-        font-weight: 500;
+    .team-logo {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        object-fit: contain;
+        flex-shrink: 0;
     }
-    .team-position span {
-        display: inline-block;
-        background: rgba(55,0,60,0.1);
-        padding: 2px 8px;
-        border-radius: 6px;
-        font-weight: 600;
-    }
-    [data-theme="dark"] .team-position span {
-        background: rgba(255,255,255,0.1);
+
+    .team-badge-sm {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75em;
+        color: white;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     .match-center {
@@ -142,28 +124,26 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        width: 100%;
+        gap: 6px;
     }
 
-    .match-time {
+    .time-pill {
         background: linear-gradient(135deg, var(--primary), var(--primary-light));
         color: white;
-        padding: 12px 28px;
+        padding: 10px 0;
         border-radius: 50px;
         font-weight: 700;
-        font-size: 1em;
-        letter-spacing: 0.5px;
+        font-size: 0.95em;
+        width: 100%;
+        text-align: center;
         box-shadow: 0 4px 15px rgba(55,0,60,0.3);
         white-space: nowrap;
-        text-align: center;
-        width: 100%;
     }
 
-    .match-vs {
+    .vs-label {
         color: var(--table-text);
-        opacity: 0.4;
-        font-size: 0.75em;
+        opacity: 0.35;
+        font-size: 0.7em;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 3px;
@@ -178,17 +158,12 @@
     @media (max-width: 768px) {
         .fixture-row {
             grid-template-columns: 1fr;
-            gap: 15px;
-            text-align: center;
-            padding: 20px;
-        }
-        .team-block, .team-block.home, .team-block.away {
-            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
             text-align: center;
         }
-        .team-main, .team-block.home .team-main {
-            flex-direction: column;
-            gap: 8px;
+        .team-home, .team-away {
+            justify-content: center;
         }
         .match-center { order: -1; }
     }
@@ -214,45 +189,33 @@
             {% endif %}
 
             <div class="fixture-row">
-                <div class="team-block home">
-                    <div class="team-main">
-                        {% set home_logo = fixture.home_team | team_logo %}
-                        {% if home_logo %}
-                            <img src="{{ home_logo }}" alt="{{ fixture.home_team }}" class="team-logo">
-                        {% else %}
-                            <span class="team-badge" style="background: {{ fixture.home_team | team_color }};">
-                                {{ fixture.home_team[:2] | upper }}
-                            </span>
-                        {% endif %}
-                        <span class="team-name">{{ fixture.home_team }}</span>
-                    </div>
-                    <div class="team-position">
-                        {% set pos = team_positions.get(fixture.home_team.lower(), '?') %}
-                        <span>{{ pos }}{{ 'st' if pos == 1 else 'nd' if pos == 2 else 'rd' if pos == 3 else 'th' }}</span> in table
-                    </div>
+                <div class="team-home">
+                    <span class="team-name">{{ fixture.home_team }}</span>
+                    {% set home_logo = fixture.home_team | team_logo %}
+                    {% if home_logo %}
+                        <img src="{{ home_logo }}" alt="{{ fixture.home_team }}" class="team-logo">
+                    {% else %}
+                        <span class="team-badge-sm" style="background: {{ fixture.home_team | team_color }};">
+                            {{ fixture.home_team[:2] | upper }}
+                        </span>
+                    {% endif %}
                 </div>
 
                 <div class="match-center">
-                    <div class="match-time">{{ fixture.time or 'TBD' }}</div>
-                    <div class="match-vs">vs</div>
+                    <div class="time-pill">{{ fixture.time or 'TBD' }}</div>
+                    <span class="vs-label">vs</span>
                 </div>
 
-                <div class="team-block away">
-                    <div class="team-main">
-                        {% set away_logo = fixture.away_team | team_logo %}
-                        {% if away_logo %}
-                            <img src="{{ away_logo }}" alt="{{ fixture.away_team }}" class="team-logo">
-                        {% else %}
-                            <span class="team-badge" style="background: {{ fixture.away_team | team_color }};">
-                                {{ fixture.away_team[:2] | upper }}
-                            </span>
-                        {% endif %}
-                        <span class="team-name">{{ fixture.away_team }}</span>
-                    </div>
-                    <div class="team-position">
-                        {% set pos = team_positions.get(fixture.away_team.lower(), '?') %}
-                        <span>{{ pos }}{{ 'st' if pos == 1 else 'nd' if pos == 2 else 'rd' if pos == 3 else 'th' }}</span> in table
-                    </div>
+                <div class="team-away">
+                    {% set away_logo = fixture.away_team | team_logo %}
+                    {% if away_logo %}
+                        <img src="{{ away_logo }}" alt="{{ fixture.away_team }}" class="team-logo">
+                    {% else %}
+                        <span class="team-badge-sm" style="background: {{ fixture.away_team | team_color }};">
+                            {{ fixture.away_team[:2] | upper }}
+                        </span>
+                    {% endif %}
+                    <span class="team-name">{{ fixture.away_team }}</span>
                 </div>
             </div>
 
