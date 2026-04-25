@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Top Scorers - Premier League{% endblock %}
+{% block header_title %}Premier League{% endblock %}
+{% block header_subtitle %}Top Scorers 2025/26{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .team-cell-small {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .team-logo-small {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        max-width: 28px !important;
+        max-height: 28px !important;
+        object-fit: contain;
+        flex-shrink: 0;
+        display: block;
+    }
+    .team-badge-small {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.65em;
+        color: white;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    {% if scorers %}
+    <table>
+        <thead>
+            <tr>
+                <th style="text-align: center; width: 60px;">Rank</th>
+                <th>Player</th>
+                <th>Team</th>
+                <th class="stat">Goals</th>
+                <th class="stat">Assists</th>
+                <th class="stat">Played</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scorer in scorers %}
+            <tr style="animation-delay: {{ loop.index * 0.05 }}s">
+                <td class="rank">{{ scorer.rank }}</td>
+                <td style="font-weight: 600;">{{ scorer.player_name }}</td>
+                <td>
+                    <div class="team-cell-small">
+                        {% set team_logo_url = scorer.team | team_logo %}
+                        {% if team_logo_url %}
+                            <img src="{{ team_logo_url }}" alt="{{ scorer.team }}" class="team-logo-small">
+                        {% else %}
+                            <span class="team-badge-small" style="background: {{ scorer.team | team_color }};">
+                                {{ scorer.team[:2] | upper }}
+                            </span>
+                        {% endif %}
+                        <span>{{ scorer.team }}</span>
+                    </div>
+                </td>
+                <td class="stat stat-highlight">{{ scorer.goals }}</td>
+                <td class="stat">{{ scorer.assists }}</td>
+                <td class="stat">{{ scorer.played }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No Data Available</h3>
+        <p>Top scorer data could not be loaded at this time.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

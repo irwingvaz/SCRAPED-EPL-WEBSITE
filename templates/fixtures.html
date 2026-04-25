@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Fixtures - Premier League{% endblock %}
+{% block header_title %}Premier League{% endblock %}
+{% block header_subtitle %}Upcoming Fixtures{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .fixtures-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .date-group {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeUp 0.6s ease forwards;
+    }
+    .date-group:nth-child(1) { animation-delay: 0.1s; }
+    .date-group:nth-child(2) { animation-delay: 0.2s; }
+    .date-group:nth-child(3) { animation-delay: 0.3s; }
+    .date-group:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .date-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 0 10px;
+    }
+
+    .date-badge {
+        background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+        color: #1a1a2e;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1em;
+        box-shadow: 0 4px 20px rgba(0,255,135,0.3);
+    }
+
+    .date-line {
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, var(--card-border), transparent);
+    }
+
+    .matches-card {
+        background: var(--table-bg);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    }
+
+    .fixture-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 20px 25px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        gap: 20px;
+    }
+    [data-theme="dark"] .fixture-row {
+        border-bottom-color: rgba(255,255,255,0.05);
+    }
+    .fixture-row:last-child { border-bottom: none; }
+    .fixture-row:hover {
+        background: var(--row-hover);
+    }
+
+    .team-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .team-block.home { align-items: flex-end; text-align: right; }
+    .team-block.away { align-items: flex-start; text-align: left; }
+
+    .team-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .team-block.home .team-main { flex-direction: row-reverse; }
+
+    .team-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.8em;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        flex-shrink: 0;
+    }
+
+    .team-logo {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+        max-width: 42px;
+        max-height: 42px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .team-name {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: var(--table-text);
+    }
+
+    .team-position {
+        font-size: 0.85em;
+        color: var(--table-text);
+        opacity: 0.6;
+        font-weight: 500;
+    }
+    .team-position span {
+        display: inline-block;
+        background: rgba(55,0,60,0.1);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    [data-theme="dark"] .team-position span {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .match-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-width: 100px;
+    }
+
+    .match-time {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        padding: 10px 18px;
+        border-radius: 25px;
+        font-weight: 700;
+        font-size: 0.95em;
+        box-shadow: 0 4px 15px rgba(55,0,60,0.3);
+    }
+
+    .match-vs {
+        color: var(--table-text);
+        opacity: 0.4;
+        font-size: 0.8em;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--table-text);
+    }
+
+    @media (max-width: 768px) {
+        .fixture-row {
+            grid-template-columns: 1fr;
+            gap: 15px;
+            text-align: center;
+            padding: 20px;
+        }
+        .team-block, .team-block.home, .team-block.away {
+            align-items: center;
+            text-align: center;
+        }
+        .team-main, .team-block.home .team-main {
+            flex-direction: column;
+            gap: 8px;
+        }
+        .match-center { order: -1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fixtures-container">
+    {% if fixtures %}
+        {% set current_date = namespace(value='') %}
+        {% for fixture in fixtures %}
+            {% if fixture.date != current_date.value %}
+                {% if current_date.value != '' %}
+                    </div></div>
+                {% endif %}
+                {% set current_date.value = fixture.date %}
+                <div class="date-group">
+                    <div class="date-header">
+                        <div class="date-badge">{{ fixture.date }}</div>
+                        <div class="date-line"></div>
+                    </div>
+                    <div class="matches-card">
+            {% endif %}
+
+            <div class="fixture-row">
+                <div class="team-block home">
+                    <div class="team-main">
+                        {% set home_logo = fixture.home_team | team_logo %}
+                        {% if home_logo %}
+                            <img src="{{ home_logo }}" alt="{{ fixture.home_team }}" class="team-logo">
+                        {% else %}
+                            <span class="team-badge" style="background: {{ fixture.home_team | team_color }};">
+                                {{ fixture.home_team[:2] | upper }}
+                            </span>
+                        {% endif %}
+                        <span class="team-name">{{ fixture.home_team }}</span>
+                    </div>
+                    <div class="team-position">
+                        {% set pos = team_positions.get(fixture.home_team.lower(), '?') %}
+                        <span>{{ pos }}{{ 'st' if pos == 1 else 'nd' if pos == 2 else 'rd' if pos == 3 else 'th' }}</span> in table
+                    </div>
+                </div>
+
+                <div class="match-center">
+                    <div class="match-time">{{ fixture.time or 'TBD' }}</div>
+                    <div class="match-vs">vs</div>
+                </div>
+
+                <div class="team-block away">
+                    <div class="team-main">
+                        {% set away_logo = fixture.away_team | team_logo %}
+                        {% if away_logo %}
+                            <img src="{{ away_logo }}" alt="{{ fixture.away_team }}" class="team-logo">
+                        {% else %}
+                            <span class="team-badge" style="background: {{ fixture.away_team | team_color }};">
+                                {{ fixture.away_team[:2] | upper }}
+                            </span>
+                        {% endif %}
+                        <span class="team-name">{{ fixture.away_team }}</span>
+                    </div>
+                    <div class="team-position">
+                        {% set pos = team_positions.get(fixture.away_team.lower(), '?') %}
+                        <span>{{ pos }}{{ 'st' if pos == 1 else 'nd' if pos == 2 else 'rd' if pos == 3 else 'th' }}</span> in table
+                    </div>
+                </div>
+            </div>
+
+            {% if loop.last %}
+                </div></div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="matches-card">
+            <div class="empty-state">
+                <h3>No Upcoming Fixtures</h3>
+                <p>There are no upcoming fixtures to display at this time.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
