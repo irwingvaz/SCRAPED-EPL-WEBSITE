@@ -3,7 +3,9 @@ from datetime import datetime
 
 class PremierLeagueDB:
     def __init__(self, db_name='premier_league.db'):
-        self.db_name = db_name
+        import os
+        tmp_path = os.path.join('/tmp', db_name)
+        self.db_name = tmp_path if not os.access('.', os.W_OK) else db_name
         self.create_tables()
 
     def create_tables(self):

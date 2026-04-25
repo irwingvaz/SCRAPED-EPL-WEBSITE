@@ -127,6 +127,10 @@ def get_teams_data():
     db = PremierLeagueDB()
     standings = db.get_latest_standings()
 
+    if not standings:
+        scrape_premier_league_table()
+        standings = db.get_latest_standings()
+
     teams = []
     for row in standings:
         teams.append({
@@ -303,12 +307,6 @@ def handle_exception(e):
 if __name__ == '__main__':
     print("=" * 60)
     print("Starting Premier League Tracker Website")
-    print("=" * 60)
-
-    print("\nScraping latest Premier League standings...")
-    scrape_premier_league_table()
-
-    print("\n" + "=" * 60)
     print("Open your browser and go to: http://localhost:8080")
     print("=" * 60)
     app.run(debug=True, port=8080)
