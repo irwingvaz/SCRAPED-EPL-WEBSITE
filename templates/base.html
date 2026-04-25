@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#37003c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EPL Tracker">
     <title>{% block title %}Premier League{% endblock %}</title>
     <link rel="icon" href="https://www.premierleague.com/resources/rebrand/v7/favicon/favicon-32x32.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/EPLLOGO.png">
+    <link rel="manifest" href="/static/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -77,6 +83,7 @@
             opacity: 0.4;
             pointer-events: none;
             z-index: -1;
+            will-change: transform;
         }
         .orb-1 {
             width: 400px; height: 400px;
@@ -289,8 +296,7 @@
         [data-theme="dark"] .rank { color: var(--accent); }
 
         .team-badge {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             border-radius: 10px;
             display: inline-flex;
             align-items: center;
@@ -304,12 +310,9 @@
         }
 
         .team-logo {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            min-height: 36px;
-            max-width: 36px;
-            max-height: 36px;
+            width: 36px; height: 36px;
+            min-width: 36px; min-height: 36px;
+            max-width: 36px; max-height: 36px;
             object-fit: contain;
             margin-right: 12px;
             vertical-align: middle;
@@ -328,11 +331,7 @@
             padding: 80px 20px;
             color: var(--table-text);
         }
-        .empty-state h3 {
-            font-size: 1.4em;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
+        .empty-state h3 { font-size: 1.4em; margin-bottom: 10px; opacity: 0.8; }
         .empty-state p { opacity: 0.6; }
 
         footer {
@@ -341,17 +340,57 @@
             color: var(--text-secondary);
         }
 
+        /* Page loader */
+        #page-loader {
+            position: fixed;
+            inset: 0;
+            background: #1a0a1f;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #page-loader.active { display: flex; }
+        .loader-ring {
+            width: 52px; height: 52px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .loader-text {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile */
         @media (max-width: 768px) {
             header h1 { font-size: 2em; }
             .epl-logo { height: 50px; }
             th, td { padding: 12px 10px; font-size: 0.85em; }
             nav a { padding: 10px 16px; font-size: 0.85em; }
+            .orb { display: none; }
+            .bg-wrapper { animation: none; background-position: 0% 50%; }
+            .bg-wrapper::before { animation: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
 
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
+    <div id="page-loader">
+        <div class="loader-ring"></div>
+        <span class="loader-text">Loading...</span>
+    </div>
+
     <div class="bg-wrapper"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -361,9 +400,9 @@
     <div class="container">
         <header>
             <div class="logo-container">
-                <img src="https://www.premierleague.com/resources/rebrand/v7/i/elements/pl-main-logo.png"
+                <img src="/static/assets/EPLLOGO.png"
                      alt="Premier League" class="epl-logo"
-                     onerror="this.src='https://upload.wikimedia.org/wikipedia/en/f/f2/Premier_League_Logo.svg'">
+                     onerror="this.style.display='none'">
             </div>
             <h1>{% block header_title %}Premier League{% endblock %}</h1>
             <p>{% block header_subtitle %}2025/26 Season{% endblock %}</p>
@@ -397,6 +436,22 @@
             localStorage.setItem('theme', newTheme);
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         });
+
+        const loader = document.getElementById('page-loader');
+
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.href && !this.href.includes('/export/')) {
+                    loader.classList.add('active');
+                }
+            });
+        });
+
+        window.addEventListener('pageshow', () => loader.classList.remove('active'));
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+        }
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
