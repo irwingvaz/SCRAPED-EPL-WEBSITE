@@ -3,16 +3,13 @@ from datetime import datetime
 
 class PremierLeagueDB:
     def __init__(self, db_name='premier_league.db'):
-        """Initialize database connection"""
         self.db_name = db_name
         self.create_tables()
-    
+
     def create_tables(self):
-        """Create the tables if they don't exist"""
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-        
-        # Create standings table
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS standings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,26 +23,40 @@ class PremierLeagueDB:
                 goals_against INTEGER,
                 goal_difference INTEGER,
                 points INTEGER,
-                scraped_at TIMESTAMP,
-                UNIQUE(team_name, scraped_at)
+                scraped_at TIMESTAMP
             )
         ''')
-        
+
         conn.commit()
         conn.close()
-        print("✓ Database tables created/verified")
-    
+        print("[OK] Database tables created/verified")
+
+    def standings_unchanged(self, standings_data):
+        latest = self.get_latest_standings()
+        if not latest:
+            return False
+
+        if len(latest) != len(standings_data):
+            return False
+
+        for existing, new in zip(latest, standings_data):
+            if (existing[0] != new['position'] or
+                existing[9] != new['points'] or
+                existing[2] != new['played']):
+                return False
+
+        return True
+
     def save_standings(self, standings_data):
-        """Save standings data to database"""
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-        
+
         scraped_at = datetime.now()
-        
+
         for team in standings_data:
             cursor.execute('''
-                INSERT OR IGNORE INTO standings 
-                (position, team_name, played, wins, draws, losses, 
+                INSERT INTO standings
+                (position, team_name, played, wins, draws, losses,
                  goals_for, goals_against, goal_difference, points, scraped_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
@@ -61,16 +72,15 @@ class PremierLeagueDB:
                 team['points'],
                 scraped_at
             ))
-        
+
         conn.commit()
         conn.close()
-        print(f"✓ Saved {len(standings_data)} teams to database")
-    
+        print(f"[OK] Saved {len(standings_data)} teams to database")
+
     def get_latest_standings(self):
-        """Retrieve the most recent standings"""
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-        
+
         cursor.execute('''
             SELECT position, team_name, played, wins, draws, losses,
                    goals_for, goals_against, goal_difference, points, scraped_at
@@ -78,8 +88,8 @@ class PremierLeagueDB:
             WHERE scraped_at = (SELECT MAX(scraped_at) FROM standings)
             ORDER BY position
         ''')
-        
+
         results = cursor.fetchall()
         conn.close()
-        
+
         return results

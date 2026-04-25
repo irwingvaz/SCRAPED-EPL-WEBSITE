@@ -5,11 +5,9 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    """Main page showing the standings"""
     db = PremierLeagueDB()
     standings = db.get_latest_standings()
-    
-    # Convert to list of dictionaries for easier template use
+
     teams = []
     for row in standings:
         teams.append({
@@ -25,7 +23,7 @@ def home():
             'points': row[9],
             'scraped_at': row[10]
         })
-    
+
     return render_template('index.html', teams=teams)
 
 if __name__ == '__main__':
