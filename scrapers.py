@@ -1,3 +1,4 @@
+import time
 import requests
 from bs4 import BeautifulSoup
 
@@ -5,7 +6,21 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
+_cache = {}
+_CACHE_TTL = 300
+
+def _get_cached(key, fn):
+    now = time.time()
+    if key in _cache and now - _cache[key]['ts'] < _CACHE_TTL:
+        return _cache[key]['data']
+    data = fn()
+    _cache[key] = {'data': data, 'ts': now}
+    return data
+
 def scrape_top_scorers():
+    return _get_cached('top_scorers', _scrape_top_scorers)
+
+def _scrape_top_scorers():
     """Scrape Premier League top scorers from BBC Sport."""
     url = "https://www.bbc.com/sport/football/premier-league/top-scorers"
 
@@ -63,6 +78,9 @@ def scrape_top_scorers():
 
 
 def scrape_fixtures():
+    return _get_cached('fixtures', _scrape_fixtures)
+
+def _scrape_fixtures():
     """Scrape upcoming Premier League fixtures from BBC Sport."""
     import re
     from datetime import datetime
@@ -143,6 +161,9 @@ def scrape_fixtures():
 
 
 def scrape_results():
+    return _get_cached('results', _scrape_results)
+
+def _scrape_results():
     """Scrape recent Premier League results from Sky Sports."""
     import json
 
