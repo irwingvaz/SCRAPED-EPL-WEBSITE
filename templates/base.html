@@ -49,62 +49,36 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
-            background: linear-gradient(135deg, #1a0a1f 0%, #37003c 25%, #5a0062 50%, #37003c 75%, #1a0a1f 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
-
-        .bg-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background:
-                radial-gradient(ellipse at 20% 20%, rgba(0,255,135,0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(4,245,255,0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(90,0,98,0.3) 0%, transparent 70%);
-            animation: pulseGlow 8s ease-in-out infinite alternate;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        @keyframes pulseGlow {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
+            background: linear-gradient(135deg, #1a0a1f 0%, #37003c 40%, #2a0030 100%);
         }
 
         .orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
             pointer-events: none;
             z-index: -1;
             will-change: transform;
         }
         .orb-1 {
-            width: 400px; height: 400px;
-            background: linear-gradient(135deg, #00ff87, #04f5ff);
-            top: -100px; right: -100px;
+            width: 700px; height: 700px;
+            background: radial-gradient(circle at center, rgba(0,255,135,0.1) 0%, transparent 65%);
+            top: -250px; right: -250px;
             animation: float1 20s ease-in-out infinite;
         }
         .orb-2 {
-            width: 300px; height: 300px;
-            background: linear-gradient(135deg, #ff0080, #7928ca);
-            bottom: -50px; left: -50px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle at center, rgba(121,40,202,0.12) 0%, transparent 65%);
+            bottom: -200px; left: -200px;
             animation: float2 25s ease-in-out infinite;
         }
 
         @keyframes float1 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-50px, 50px) scale(1.1); }
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-40px, 40px); }
         }
         @keyframes float2 {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -40px) scale(0.9); }
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
         }
 
         .container {
@@ -165,13 +139,12 @@
             width: 50px; height: 50px;
             border: none;
             border-radius: 50%;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
+            background: rgba(55, 0, 62, 0.75);
             border: 1px solid var(--card-border);
             cursor: pointer;
             font-size: 1.3em;
             z-index: 1000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -199,11 +172,10 @@
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95em;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
+            background: rgba(55, 0, 62, 0.6);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             position: relative;
             overflow: hidden;
         }
@@ -257,27 +229,22 @@
 
         tbody tr {
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            transition: background 0.15s ease;
             opacity: 0;
-            transform: translateX(-20px);
-            animation: rowSlide 0.4s ease forwards;
+            animation: fadeIn 0.2s ease forwards;
         }
         [data-theme="dark"] tbody tr { border-bottom-color: rgba(255,255,255,0.05); }
 
-        @keyframes rowSlide {
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        tbody tr:nth-child(1) { animation-delay: 0.1s; }
-        tbody tr:nth-child(2) { animation-delay: 0.15s; }
-        tbody tr:nth-child(3) { animation-delay: 0.2s; }
-        tbody tr:nth-child(4) { animation-delay: 0.25s; }
-        tbody tr:nth-child(5) { animation-delay: 0.3s; }
-        tbody tr:nth-child(6) { animation-delay: 0.35s; }
-        tbody tr:nth-child(7) { animation-delay: 0.4s; }
-        tbody tr:nth-child(8) { animation-delay: 0.45s; }
-        tbody tr:nth-child(9) { animation-delay: 0.5s; }
-        tbody tr:nth-child(10) { animation-delay: 0.55s; }
+        tbody tr:nth-child(1)  { animation-delay: 0.05s; }
+        tbody tr:nth-child(2)  { animation-delay: 0.08s; }
+        tbody tr:nth-child(3)  { animation-delay: 0.11s; }
+        tbody tr:nth-child(4)  { animation-delay: 0.14s; }
+        tbody tr:nth-child(5)  { animation-delay: 0.17s; }
+        tbody tr:nth-child(6)  { animation-delay: 0.20s; }
+        tbody tr:nth-child(7)  { animation-delay: 0.23s; }
+        tbody tr:nth-child(8)  { animation-delay: 0.26s; }
+        tbody tr:nth-child(9)  { animation-delay: 0.29s; }
+        tbody tr:nth-child(10) { animation-delay: 0.32s; }
 
         tbody tr:hover { background: var(--row-hover); }
 

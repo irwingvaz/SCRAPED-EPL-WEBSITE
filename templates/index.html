@@ -817,33 +817,14 @@
             });
         });
 
-        // Scroll animations - once visible, stay visible
         const observer = new IntersectionObserver((entries, obs) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    // Add visible class with a small delay for smoother effect
-                    const delay = entry.target.dataset.delay || 0;
-                    setTimeout(() => {
-                        entry.target.classList.add('visible');
-                        if (entry.target.tagName === 'TR') {
-                            entry.target.classList.add('row-visible');
-                        }
-                    }, delay);
-                    // Stop observing once triggered - prevents re-animation
+                    entry.target.classList.add('visible', 'row-visible');
                     obs.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
-
-        // Add staggered delays to rows
-        document.querySelectorAll('tbody tr').forEach((el, i) => {
-            el.dataset.delay = i * 30; // 30ms stagger between rows
-        });
-
-        // Add delays to stat cards
-        document.querySelectorAll('.stat-card').forEach((el, i) => {
-            el.dataset.delay = i * 100; // 100ms stagger between cards
-        });
+        }, { threshold: 0.05 });
 
         document.querySelectorAll('.stat-card, .standings-table, tbody tr').forEach(el => observer.observe(el));
 
