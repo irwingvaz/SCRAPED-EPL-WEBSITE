@@ -90,13 +90,33 @@ TEAM_COLORS = {
     'sunderland': '#EB172B',
 }
 
+def _fuzzy_team_lookup(team_name, lookup, default=None):
+    name = team_name.lower().strip()
+    if name in lookup:
+        return lookup[name]
+    # strip common suffixes/prefixes and retry
+    cleaned = (name
+        .replace('afc ', '').replace(' afc', '')
+        .replace(' fc', '').replace('fc ', '')
+        .replace(' united', '').replace(' city', '')
+        .replace(' town', '').replace(' wanderers', '')
+        .replace(' hotspur', '').replace(' & hove albion', '')
+        .replace(' and hove albion', '').strip())
+    if cleaned in lookup:
+        return lookup[cleaned]
+    # substring scan — longest keys first to avoid short key false-matches
+    for key in sorted(lookup, key=len, reverse=True):
+        if len(key) > 4 and (key in name or name in key):
+            return lookup[key]
+    return default
+
 @app.template_filter('team_color')
 def team_color_filter(team_name):
-    return TEAM_COLORS.get(team_name.lower(), '#667eea')
+    return _fuzzy_team_lookup(team_name, TEAM_COLORS, '#667eea')
 
 @app.template_filter('team_logo')
 def team_logo_filter(team_name):
-    return TEAM_LOGOS.get(team_name.lower())
+    return _fuzzy_team_lookup(team_name, TEAM_LOGOS)
 
 def get_team_form(team_name, results_list, limit=5):
     form = []

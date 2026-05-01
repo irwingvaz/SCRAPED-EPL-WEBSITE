@@ -19,10 +19,11 @@ _CACHE_TTL = 3600  # 1 hour — data changes at most a few times per match day
 
 def _get_cached(key, fn):
     now = time.time()
-    if key in _cache and now - _cache[key]['ts'] < _CACHE_TTL:
+    if key in _cache and _cache[key]['data'] and now - _cache[key]['ts'] < _CACHE_TTL:
         return _cache[key]['data']
     data = fn()
-    _cache[key] = {'data': data, 'ts': now}
+    if data:  # never cache empty — retry next request instead
+        _cache[key] = {'data': data, 'ts': now}
     return data
 
 
@@ -142,10 +143,23 @@ def _scrape_fixtures():
                 )
             }
         )
-        fixtures = (result.extract or {}).get('fixtures', [])
+        raw = (result.extract or {}).get('fixtures', [])
     except Exception as e:
         print(f"[Firecrawl] fixtures error: {e}")
         return []
+
+    fixtures = []
+    for f in raw:
+        home = str(f.get('home_team', '')).strip()
+        away = str(f.get('away_team', '')).strip()
+        if not home or not away or home == away:
+            continue
+        fixtures.append({
+            'home_team': home,
+            'away_team': away,
+            'time': str(f.get('time', 'TBD')).strip() or 'TBD',
+            'date': str(f.get('date', '')).strip(),
+        })
 
     return fixtures[:20]
 
@@ -165,13 +179,29 @@ def _scrape_results():
                 "systemPrompt": (
                     "Extract recent Premier League match results. "
                     "Only include fully completed matches with final numeric scores. "
-                    "Use the full team name as it appears on the page."
+                    "Use the full official team name as it appears on the page."
                 )
             }
         )
-        results = (result.extract or {}).get('results', [])
+        raw = (result.extract or {}).get('results', [])
     except Exception as e:
         print(f"[Firecrawl] results error: {e}")
         return []
+
+    results = []
+    for r in raw:
+        try:
+            home = str(r.get('home_team', '')).strip()
+            away = str(r.get('away_team', '')).strip()
+            if not home or not away:
+                continue
+            results.append({
+                'home_team': home,
+                'away_team': away,
+                'home_score': int(r.get('home_score', 0)),
+                'away_score': int(r.get('away_score', 0)),
+            })
+        except (ValueError, TypeError):
+            continue
 
     return results[:20]
