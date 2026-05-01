@@ -1,7 +1,6 @@
 from flask import Flask, render_template, jsonify, Response
 from database import PremierLeagueDB
-from test_scraper import scrape_premier_league_table
-from scrapers import scrape_top_scorers, scrape_fixtures, scrape_results
+from firecrawl_scrapers import scrape_premier_league_table, scrape_top_scorers, scrape_fixtures, scrape_results
 import csv
 import io
 import time
