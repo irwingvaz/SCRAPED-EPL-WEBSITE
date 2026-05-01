@@ -52,7 +52,8 @@ TEAM_LOGOS = {
     'wolves': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
     'wolverhampton': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
     'wolverhampton wanderers': 'https://resources.premierleague.com/premierleague/badges/rb/t39.svg',
-    'sunderland': 'https://resources.premierleague.com/premierleague/badges/rb/t56.svg',
+    'sunderland': 'https://e0.365dm.com/football/badges/192/415.png',
+    'burnley': 'https://e0.365dm.com/football/badges/192/160.png',
 }
 
 TEAM_COLORS = {
@@ -88,6 +89,7 @@ TEAM_COLORS = {
     'wolverhampton': '#FDB913',
     'wolverhampton wanderers': '#FDB913',
     'sunderland': '#EB172B',
+    'burnley': '#6C1D45',
 }
 
 def _fuzzy_team_lookup(team_name, lookup, default=None):
