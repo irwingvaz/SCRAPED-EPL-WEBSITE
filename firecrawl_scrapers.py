@@ -1,8 +1,7 @@
-import os
+import re
 import time
-from typing import List
-from pydantic import BaseModel
-from firecrawl import FirecrawlApp
+from datetime import date
+from firecrawl import Firecrawl
 from database import PremierLeagueDB
 
 try:
@@ -11,10 +10,10 @@ try:
 except ImportError:
     pass
 
-_fc = FirecrawlApp(api_key=os.environ.get('FIRECRAWL_API_KEY'))
+_fc = Firecrawl()  # reads FIRECRAWL_API_KEY from env
 
 _cache = {}
-_CACHE_TTL = 3600  # 1 hour — data changes at most a few times per match day
+_CACHE_TTL = 3600  # 1 hour
 
 
 def _get_cached(key, fn):
@@ -27,69 +26,45 @@ def _get_cached(key, fn):
     return data
 
 
-# ── Schemas ───────────────────────────────────────────────────────────────────
+# ── Standings (extract — LLM handles the table well) ─────────────────────────
 
-class TeamStanding(BaseModel):
-    position: int
-    team_name: str
-    played: int
-    wins: int
-    draws: int
-    losses: int
-    goals_for: int
-    goals_against: int
-    goal_difference: int
-    points: int
-
-class StandingsPage(BaseModel):
-    teams: List[TeamStanding]
-
-
-class TopScorer(BaseModel):
-    rank: int
-    player_name: str
-    team: str
-    goals: int
-    assists: int
-    played: int
-
-class TopScorersPage(BaseModel):
-    scorers: List[TopScorer]
-
-
-class Fixture(BaseModel):
-    home_team: str
-    away_team: str
-    time: str
-    date: str
-
-class FixturesPage(BaseModel):
-    fixtures: List[Fixture]
-
-
-class MatchResult(BaseModel):
-    home_team: str
-    away_team: str
-    home_score: int
-    away_score: int
-
-class ResultsPage(BaseModel):
-    results: List[MatchResult]
-
-
-# ── Standings ─────────────────────────────────────────────────────────────────
+_STANDINGS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "teams": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "position":        {"type": "integer"},
+                    "team_name":       {"type": "string"},
+                    "played":          {"type": "integer"},
+                    "wins":            {"type": "integer"},
+                    "draws":           {"type": "integer"},
+                    "losses":          {"type": "integer"},
+                    "goals_for":       {"type": "integer"},
+                    "goals_against":   {"type": "integer"},
+                    "goal_difference": {"type": "integer"},
+                    "points":          {"type": "integer"},
+                },
+                "required": ["position", "team_name", "played", "wins", "draws",
+                             "losses", "goals_for", "goals_against", "goal_difference", "points"]
+            }
+        }
+    }
+}
 
 def scrape_premier_league_table():
     return _get_cached('standings', _scrape_standings)
 
 def _scrape_standings():
     try:
-        result = _fc.scrape_url(
-            "https://www.bbc.com/sport/football/premier-league/table",
-            formats=["extract"],
-            extract={"schema": StandingsPage.model_json_schema()}
+        result = _fc.extract(
+            urls=["https://www.bbc.com/sport/football/premier-league/table"],
+            prompt="Extract the full Premier League standings table with all 20 teams and all their stats.",
+            schema=_STANDINGS_SCHEMA
         )
-        teams = (result.extract or {}).get('teams', [])
+        teams = (result.data or {}).get('teams', [])
     except Exception as e:
         print(f"[Firecrawl] standings error: {e}")
         return []
@@ -104,19 +79,40 @@ def _scrape_standings():
     return teams
 
 
-# ── Top Scorers ───────────────────────────────────────────────────────────────
+# ── Top Scorers (extract — table data, LLM handles well) ─────────────────────
+
+_SCORERS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "scorers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "rank":        {"type": "integer"},
+                    "player_name": {"type": "string"},
+                    "team":        {"type": "string"},
+                    "goals":       {"type": "integer"},
+                    "assists":     {"type": "integer"},
+                    "played":      {"type": "integer"},
+                },
+                "required": ["rank", "player_name", "team", "goals", "assists", "played"]
+            }
+        }
+    }
+}
 
 def scrape_top_scorers():
     return _get_cached('top_scorers', _scrape_top_scorers)
 
 def _scrape_top_scorers():
     try:
-        result = _fc.scrape_url(
-            "https://www.bbc.com/sport/football/premier-league/top-scorers",
-            formats=["extract"],
-            extract={"schema": TopScorersPage.model_json_schema()}
+        result = _fc.extract(
+            urls=["https://www.bbc.com/sport/football/premier-league/top-scorers"],
+            prompt="Extract the top Premier League goal scorers with their rank, name, team, goals, assists and games played.",
+            schema=_SCORERS_SCHEMA
         )
-        scorers = (result.extract or {}).get('scorers', [])
+        scorers = (result.data or {}).get('scorers', [])
     except Exception as e:
         print(f"[Firecrawl] top scorers error: {e}")
         return []
@@ -124,84 +120,85 @@ def _scrape_top_scorers():
     return scorers[:20]
 
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
+# ── Fixtures (scrape + parse — Sky Sports markdown is clean) ─────────────────
 
 def scrape_fixtures():
     return _get_cached('fixtures', _scrape_fixtures)
 
 def _scrape_fixtures():
     try:
-        result = _fc.scrape_url(
-            "https://www.bbc.com/sport/football/premier-league/scores-fixtures",
-            formats=["extract"],
-            extract={
-                "schema": FixturesPage.model_json_schema(),
-                "systemPrompt": (
-                    "Extract only upcoming Premier League fixtures that have not been played yet. "
-                    "Do not include completed matches with scores. "
-                    "Include the match date (e.g. 'Saturday 3rd May') and kick-off time in 12-hour format (e.g. '3:00 PM')."
-                )
-            }
+        result = _fc.scrape(
+            "https://www.skysports.com/premier-league-scores-fixtures",
+            formats=["markdown"]
         )
-        raw = (result.extract or {}).get('fixtures', [])
+        markdown = result.markdown or ''
     except Exception as e:
-        print(f"[Firecrawl] fixtures error: {e}")
+        print(f"[Firecrawl] fixtures scrape error: {e}")
         return []
 
     fixtures = []
-    for f in raw:
-        home = str(f.get('home_team', '')).strip()
-        away = str(f.get('away_team', '')).strip()
-        if not home or not away or home == away:
+    current_date = ''
+
+    for line in markdown.split('\n'):
+        line = line.strip()
+        # Date header: ## Friday 1st May
+        date_match = re.match(r'^## (.+)$', line)
+        if date_match:
+            current_date = date_match.group(1).strip()
             continue
-        fixtures.append({
-            'home_team': home,
-            'away_team': away,
-            'time': str(f.get('time', 'TBD')).strip() or 'TBD',
-            'date': str(f.get('date', '')).strip(),
-        })
+        # Fixture line: TeamA vs TeamB. Kick-off at TIME
+        fixture_match = re.match(r'^(.+?) vs (.+?)\. Kick-off at (.+)$', line)
+        if fixture_match and current_date:
+            home = fixture_match.group(1).strip()
+            away = fixture_match.group(2).strip()
+            if home and away and home != away:
+                fixtures.append({
+                    'home_team': home,
+                    'away_team': away,
+                    'time': fixture_match.group(3).strip(),
+                    'date': current_date,
+                })
 
     return fixtures[:20]
 
 
-# ── Results ───────────────────────────────────────────────────────────────────
+# ── Results (scrape + parse — BBC Sport markdown has clean score pattern) ─────
 
 def scrape_results():
     return _get_cached('results', _scrape_results)
 
 def _scrape_results():
+    today = date.today()
+    # Early in the month means no results yet — use previous month
+    if today.day <= 7:
+        year = today.year - 1 if today.month == 1 else today.year
+        month = 12 if today.month == 1 else today.month - 1
+    else:
+        year, month = today.year, today.month
+
+    url = f"https://www.bbc.com/sport/football/premier-league/scores-fixtures/{year}-{month:02d}"
+
     try:
-        result = _fc.scrape_url(
-            "https://www.skysports.com/premier-league-results",
-            formats=["extract"],
-            extract={
-                "schema": ResultsPage.model_json_schema(),
-                "systemPrompt": (
-                    "Extract recent Premier League match results. "
-                    "Only include fully completed matches with final numeric scores. "
-                    "Use the full official team name as it appears on the page."
-                )
-            }
-        )
-        raw = (result.extract or {}).get('results', [])
+        result = _fc.scrape(url, formats=["markdown"])
+        markdown = result.markdown or ''
     except Exception as e:
-        print(f"[Firecrawl] results error: {e}")
+        print(f"[Firecrawl] results scrape error: {e}")
         return []
 
+    # BBC Sport pattern: [TeamA N , TeamB M at Full time
     results = []
-    for r in raw:
-        try:
-            home = str(r.get('home_team', '')).strip()
-            away = str(r.get('away_team', '')).strip()
-            if not home or not away:
-                continue
-            results.append({
-                'home_team': home,
-                'away_team': away,
-                'home_score': int(r.get('home_score', 0)),
-                'away_score': int(r.get('away_score', 0)),
-            })
-        except (ValueError, TypeError):
+    for match in re.finditer(
+        r'\[(.+?) (\d+) , (.+?) (\d+) at Full time', markdown
+    ):
+        home = match.group(1).strip()
+        away = match.group(3).strip()
+        if not home or not away:
             continue
+        results.append({
+            'home_team': home,
+            'away_team': away,
+            'home_score': int(match.group(2)),
+            'away_score': int(match.group(4)),
+        })
 
     return results[:20]
